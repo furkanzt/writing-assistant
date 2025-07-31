@@ -46,20 +46,12 @@ export default function SubmitPage() {
       criteria: ["Development", "Organization", "Language Use"],
     },
     {
-      value: "sat",
-      label: "SAT Essay",
-      description: "Score 2-8",
-      timeLimit: 50,
-      wordTarget: "400+ words",
-      criteria: ["Reading", "Analysis", "Writing"],
-    },
-    {
-      value: "gre",
-      label: "GRE Analytical Writing",
-      description: "Score 0-6",
-      timeLimit: 30,
-      wordTarget: "500+ words",
-      criteria: ["Issue Task", "Argument Task"],
+      value: "metu-epe",
+      label: "METU EPE Writing",
+      description: "METU exam criteria",
+      timeLimit: 45,
+      wordTarget: "250+ words",
+      criteria: ["Content", "Organization", "Language", "Mechanics"],
     },
   ]
 
@@ -74,13 +66,10 @@ export default function SubmitPage() {
       "Some people prefer to work for themselves or own a business. Others prefer to work for an employer. Would you rather be self-employed, work for someone else, or own a business?",
       "Do you agree or disagree with the following statement? The best way to travel is in a group led by a tour guide.",
     ],
-    sat: [
-      "As you read the passage below, consider how the author uses evidence, such as facts or examples, to support claims, reasoning to develop ideas and connect claims and evidence, and stylistic or persuasive elements to add power to the ideas expressed.",
-      "Write an essay in which you explain how the author builds an argument to persuade an audience that the author's claim on a subject is valid.",
-    ],
-    gre: [
-      "As people rely more and more on technology to solve problems, the ability of humans to think for themselves will surely deteriorate.",
-      "To understand the most important characteristics of a society, one must study its major cities.",
+    "metu-epe": [
+      "Discuss the advantages and disadvantages of online learning compared to traditional classroom education.",
+      "What are the most effective ways to reduce environmental pollution in urban areas?",
+      "Analyze the impact of social media on interpersonal relationships in modern society.",
     ],
   }
 
@@ -113,6 +102,47 @@ export default function SubmitPage() {
 - Hook/Background
 - Restate the question
 - Clear thesis statement
+
+## Body Paragraph 1
+- Topic sentence
+- Supporting detail 1
+- Supporting detail 2
+- Concluding sentence
+
+## Body Paragraph 2
+- Topic sentence
+- Supporting detail 1
+- Supporting detail 2
+- Concluding sentence
+
+## Conclusion
+- Restate thesis
+- Summarize main points
+- Final thought`,
+
+    "metu-epe": `# METU EPE Writing Template
+
+## Introduction
+- Hook/Background
+- Restate the topic
+- Clear thesis statement
+
+## Body Paragraph 1
+- Topic sentence
+- Supporting detail 1
+- Supporting detail 2
+- Concluding sentence
+
+## Body Paragraph 2
+- Topic sentence
+- Supporting detail 1
+- Supporting detail 2
+- Concluding sentence
+
+## Conclusion
+- Restate thesis
+- Summarize main points
+- Final thought`,
 
 Body Paragraph 1:
 - Main reason 1

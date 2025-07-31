@@ -148,8 +148,7 @@ export async function POST(request: NextRequest) {
     
     return NextResponse.json(
       { 
-        error: errorMessage,
-        details: error instanceof Error ? error.stack : 'Unknown error'
+        error: errorMessage
       },
       { status: 500 }
     );
@@ -217,48 +216,36 @@ function getRubrics() {
         }
       ]
     },
-    sat: {
-      name: "SAT Essay",
+    "metu-epe": {
+      name: "METU EPE Writing",
       criteria: [
         {
-          id: "reading",
-          name: "Reading",
-          description: "How well the essay demonstrates understanding of the source text",
-          weight: 33,
-          maxScore: 4
+          id: "content",
+          name: "Content",
+          description: "How well the essay addresses the topic with relevant ideas and examples",
+          weight: 25,
+          maxScore: 10
         },
         {
-          id: "analysis",
-          name: "Analysis",
-          description: "How well the essay analyzes the author's argument and evidence",
-          weight: 33,
-          maxScore: 4
+          id: "organization",
+          name: "Organization",
+          description: "How well the essay is structured with clear introduction, body, and conclusion",
+          weight: 25,
+          maxScore: 10
         },
         {
-          id: "writing",
-          name: "Writing",
-          description: "How well the essay is written with clear organization and language",
-          weight: 34,
-          maxScore: 4
-        }
-      ]
-    },
-    gre: {
-      name: "GRE Analytical Writing",
-      criteria: [
-        {
-          id: "issue-task",
-          name: "Issue Task",
-          description: "How well the essay addresses the issue with clear position and reasoning",
-          weight: 50,
-          maxScore: 6
+          id: "language",
+          name: "Language",
+          description: "Accuracy and variety of vocabulary and grammar",
+          weight: 25,
+          maxScore: 10
         },
         {
-          id: "argument-task",
-          name: "Argument Task",
-          description: "How well the essay critiques the argument with logical analysis",
-          weight: 50,
-          maxScore: 6
+          id: "mechanics",
+          name: "Mechanics",
+          description: "Spelling, punctuation, and formatting accuracy",
+          weight: 25,
+          maxScore: 10
         }
       ]
     }
