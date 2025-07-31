@@ -144,46 +144,29 @@ export default function SubmitPage() {
 - Summarize main points
 - Final thought`,
 
-Body Paragraph 1:
-- Main reason 1
-- Specific examples
-- Explanation
+    "metu-epe": `# METU EPE Writing Template
 
-Body Paragraph 2:
-- Main reason 2
-- Specific examples
-- Explanation
-
-Body Paragraph 3 (optional):
-- Additional reason or counterargument
-- Examples and explanation
-
-Conclusion:
-- Restate thesis
-- Summarize main points
-- Final statement`,
-
-    "metu-epe": `Introduction:
+## Introduction
 - Background information
 - Thesis statement
 - Essay outline
 
-Body Paragraph 1:
+## Body Paragraph 1
 - First main point
 - Supporting evidence
 - Analysis
 
-Body Paragraph 2:
+## Body Paragraph 2
 - Second main point
 - Supporting evidence
 - Analysis
 
-Body Paragraph 3:
+## Body Paragraph 3
 - Third main point or counterargument
 - Supporting evidence
 - Analysis
 
-Conclusion:
+## Conclusion
 - Restate thesis
 - Summarize key points
 - Implications or recommendations`,
