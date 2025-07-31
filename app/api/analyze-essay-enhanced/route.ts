@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { analyzeEssay, analyzeEssayPerCriterion, generateTodoList } from '@/lib/openai';
 import { EssayAnalysis, CriterionFeedback, TodoItem } from '@/lib/types';
 
+// Set timeout for Vercel (8 seconds to be safe)
+export const maxDuration = 8;
+
 export async function POST(request: NextRequest) {
   try {
     console.log('Enhanced essay analysis request received');
@@ -71,15 +74,21 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate general feedback
+    console.log('Starting general feedback analysis...');
     const generalFeedback = await analyzeEssay(essay, examType);
 
-    // Generate per-criterion feedback
+    // Generate per-criterion feedback (limit to 2 calls to avoid timeout)
     const criterionFeedbacks: CriterionFeedback[] = [];
     let totalScore = 0;
     let maxTotalScore = 0;
 
-    for (const criterion of selectedRubric.criteria) {
+    // Only analyze the first 2 criteria to avoid timeout
+    const criteriaToAnalyze = selectedRubric.criteria.slice(0, 2);
+    
+    for (const criterion of criteriaToAnalyze) {
       try {
+        console.log(`Analyzing criterion: ${criterion.name}`);
+        
         const criterionAnalysis = await analyzeEssayPerCriterion(
           essay,
           examType,
@@ -101,6 +110,7 @@ export async function POST(request: NextRequest) {
 
         // Generate todo list for this criterion
         try {
+          console.log(`Generating todo list for ${criterion.name}`);
           const todoItems = await generateTodoList(criterionAnalysis, essay);
           criterionFeedback.todoItems = todoItems.map((item: any, index: number) => ({
             id: `${criterion.id}-todo-${index}`,
@@ -132,6 +142,22 @@ export async function POST(request: NextRequest) {
           todoItems: []
         });
       }
+    }
+
+    // Add remaining criteria with basic feedback (no AI call)
+    for (let i = 2; i < selectedRubric.criteria.length; i++) {
+      const criterion = selectedRubric.criteria[i];
+      const criterionFeedback: CriterionFeedback = {
+        criterionId: criterion.id,
+        criterionName: criterion.name,
+        score: 0,
+        maxScore: criterion.maxScore,
+        feedback: `Detailed analysis for ${criterion.name} will be available in the enhanced interface.`,
+        aiFeedback: `Detailed analysis for ${criterion.name} will be available in the enhanced interface.`,
+        chatHistory: [],
+        todoItems: []
+      };
+      criterionFeedbacks.push(criterionFeedback);
     }
 
     // Calculate overall score
