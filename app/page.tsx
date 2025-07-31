@@ -31,18 +31,11 @@ export default function LandingPage() {
           Get instant feedback on your essays for IELTS, TOEFL, and METU EPE. Simple, effective, and designed for
           students.
         </p>
-        <div className="flex gap-4 justify-center">
-          <Link href="/submit">
-            <Button size="lg" variant="outline" className="border-red-600 text-red-600 hover:bg-red-50">
-              Basic Analysis
-            </Button>
-          </Link>
-          <Link href="/submit-enhanced">
-            <Button size="lg" className="bg-red-600 hover:bg-red-700">
-              Enhanced Analysis
-            </Button>
-          </Link>
-        </div>
+        <Link href="/submit">
+          <Button size="lg" className="bg-red-600 hover:bg-red-700">
+            Start Writing Better
+          </Button>
+        </Link>
       </section>
 
       {/* Features Section */}

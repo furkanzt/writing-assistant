@@ -1,19 +1,19 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Brain, Upload, ArrowLeft, Loader2, Clock, Target, BookOpen, Timer } from "lucide-react"
+import { Brain, Upload, ArrowLeft, Loader2, Clock, Target, BookOpen, Timer, FileText } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { MarkdownEditor } from "@/components/MarkdownEditor"
+import { EssayAnalysis } from "@/lib/types"
 
 export default function SubmitPage() {
   const [essayText, setEssayText] = useState("")
@@ -46,12 +46,20 @@ export default function SubmitPage() {
       criteria: ["Development", "Organization", "Language Use"],
     },
     {
-      value: "metu-epe",
-      label: "METU EPE Writing",
-      description: "METU exam criteria",
-      timeLimit: 45,
-      wordTarget: "250+ words",
-      criteria: ["Content", "Organization", "Language", "Mechanics"],
+      value: "sat",
+      label: "SAT Essay",
+      description: "Score 2-8",
+      timeLimit: 50,
+      wordTarget: "400+ words",
+      criteria: ["Reading", "Analysis", "Writing"],
+    },
+    {
+      value: "gre",
+      label: "GRE Analytical Writing",
+      description: "Score 0-6",
+      timeLimit: 30,
+      wordTarget: "500+ words",
+      criteria: ["Issue Task", "Argument Task"],
     },
   ]
 
@@ -66,35 +74,42 @@ export default function SubmitPage() {
       "Some people prefer to work for themselves or own a business. Others prefer to work for an employer. Would you rather be self-employed, work for someone else, or own a business?",
       "Do you agree or disagree with the following statement? The best way to travel is in a group led by a tour guide.",
     ],
-    "metu-epe": [
-      "Discuss the advantages and disadvantages of online learning compared to traditional classroom education.",
-      "What are the most effective ways to reduce environmental pollution in urban areas?",
-      "Analyze the impact of social media on interpersonal relationships in modern society.",
+    sat: [
+      "As you read the passage below, consider how the author uses evidence, such as facts or examples, to support claims, reasoning to develop ideas and connect claims and evidence, and stylistic or persuasive elements to add power to the ideas expressed.",
+      "Write an essay in which you explain how the author builds an argument to persuade an audience that the author's claim on a subject is valid.",
+    ],
+    gre: [
+      "As people rely more and more on technology to solve problems, the ability of humans to think for themselves will surely deteriorate.",
+      "To understand the most important characteristics of a society, one must study its major cities.",
     ],
   }
 
   const essayTemplates = {
-    ielts: `Introduction:
+    ielts: `# IELTS Writing Task 2 Template
+
+## Introduction
 - Paraphrase the question
-- Present both views briefly
+- Present both views briefly  
 - State your opinion
 
-Body Paragraph 1:
+## Body Paragraph 1
 - Topic sentence for first view
 - Explanation and example
 - Link to next paragraph
 
-Body Paragraph 2:
+## Body Paragraph 2
 - Topic sentence for second view
 - Explanation and example
 - Your opinion
 
-Conclusion:
+## Conclusion
 - Summarize both views
 - Restate your opinion
 - Final thought`,
 
-    toefl: `Introduction:
+    toefl: `# TOEFL Independent Writing Template
+
+## Introduction
 - Hook/Background
 - Restate the question
 - Clear thesis statement
@@ -197,11 +212,17 @@ Conclusion:
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    if (!essayText.trim() || !selectedRubric) {
+      alert("Please fill in all required fields")
+      return
+    }
+
     setIsAnalyzing(true)
     setIsTimerActive(false)
-
+    
     try {
-      const response = await fetch('/api/analyze-essay', {
+      const response = await fetch('/api/analyze-essay-enhanced', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -215,24 +236,19 @@ Conclusion:
       })
 
       if (!response.ok) {
-        throw new Error('Failed to analyze essay')
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to analyze essay')
       }
 
-      const data = await response.json()
-
-      // Redirect to feedback page with data
-      const params = new URLSearchParams({
-        essay: encodeURIComponent(data.essay),
-        examType: data.examType,
-        feedback: encodeURIComponent(data.feedback),
-        ...(data.title && { title: encodeURIComponent(data.title) }),
-        ...(data.topic && { topic: encodeURIComponent(data.topic) }),
-      })
-
-      router.push(`/feedback/${data.id}?${params.toString()}`)
+      const analysisData: EssayAnalysis = await response.json()
+      
+      // Navigate to the enhanced feedback page
+      router.push(`/feedback-enhanced/${analysisData.id}`)
+      
     } catch (error) {
       console.error('Error analyzing essay:', error)
-      alert('Failed to analyze essay. Please try again.')
+      alert(error instanceof Error ? error.message : 'Failed to analyze essay')
+    } finally {
       setIsAnalyzing(false)
     }
   }
@@ -473,18 +489,16 @@ Conclusion:
                 <CardDescription>Write your essay below</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <Textarea
-                  id="essay"
+                <MarkdownEditor
+                  value={essayText}
+                  onChange={setEssayText}
                   placeholder={
                     selectedTopic
                       ? `Write your essay about: ${selectedTopic.substring(0, 100)}...`
                       : "Write your essay here..."
                   }
-                  value={essayText}
-                  onChange={(e) => setEssayText(e.target.value)}
-                  className="min-h-[400px] mt-1"
-                  required
-                  disabled={isTimedMode && !isTimerActive && timeRemaining > 0}
+                  label="Essay Content"
+                  className="min-h-[400px]"
                 />
 
                 {isTimedMode && !isTimerActive && timeRemaining > 0 && (

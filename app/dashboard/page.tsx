@@ -101,7 +101,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <Link href="/submit">
             <Card className="hover:shadow-lg transition-shadow cursor-pointer border-red-200 hover:border-red-300">
               <CardContent className="flex items-center p-6">
@@ -133,6 +133,18 @@ export default function DashboardPage() {
                 <div>
                   <h3 className="font-semibold text-lg">Progress</h3>
                   <p className="text-gray-600 text-sm">Track improvement</p>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Link href="/goals">
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer border-red-200 hover:border-red-300">
+              <CardContent className="flex items-center p-6">
+                <Brain className="h-12 w-12 text-red-600 mr-4" />
+                <div>
+                  <h3 className="font-semibold text-lg">AI Features</h3>
+                  <p className="text-gray-600 text-sm">Enhanced analysis</p>
                 </div>
               </CardContent>
             </Card>
@@ -176,7 +188,7 @@ export default function DashboardPage() {
           <CardContent>
             <div className="space-y-4">
               {sampleEssays.map((essay) => (
-                <Link href={`/feedback/${essay.id}`} key={essay.id}>
+                <Link href={`/feedback-enhanced/${essay.id}`} key={essay.id}>
                   <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 cursor-pointer">
                     <div className="flex-1">
                       <h4 className="font-medium">{essay.title}</h4>
