@@ -68,6 +68,214 @@ Essay: "${essay}"`;
   }
 }
 
+export async function analyzeEssayPerCriterion(essay: string, examType: string, criterionId: string, criterionName: string, criterionDescription: string) {
+  try {
+    if (!process.env.github_token) {
+      throw new Error("GitHub token not configured");
+    }
+    
+    if (!process.env.openai_base_url) {
+      throw new Error("OpenAI base URL not configured");
+    }
+
+    const systemPrompt = `You are an expert essay evaluator focusing on the specific criterion: "${criterionName}".
+
+Criterion Description: ${criterionDescription}
+
+Your task is to:
+1. Evaluate the essay specifically for this criterion
+2. Provide a score out of the maximum for this criterion
+3. Give detailed, actionable feedback
+4. Suggest specific improvements
+
+Please provide your response in this exact JSON format:
+{
+  "score": number,
+  "maxScore": number,
+  "feedback": "detailed feedback text",
+  "suggestions": ["suggestion1", "suggestion2", "suggestion3"]
+}`;
+
+    const userPrompt = `Please analyze this essay specifically for the "${criterionName}" criterion:
+
+Essay: "${essay}"
+
+Focus only on this criterion and provide specific, actionable feedback.`;
+
+    const response = await client.chat.completions.create({
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt }
+      ],
+      model: process.env.openai_model || "openai/gpt-4o-mini",
+      temperature: 0.7,
+      max_tokens: 1000,
+    });
+
+    if (!response.choices[0]?.message?.content) {
+      throw new Error("No response content received from AI");
+    }
+
+    const content = response.choices[0].message.content;
+    
+    try {
+      const result = JSON.parse(content);
+      return {
+        score: result.score,
+        maxScore: result.maxScore,
+        feedback: result.feedback,
+        suggestions: result.suggestions || []
+      };
+    } catch (parseError) {
+      // If JSON parsing fails, return the raw content
+      return {
+        score: 0,
+        maxScore: 10,
+        feedback: content,
+        suggestions: []
+      };
+    }
+  } catch (error) {
+    console.error('Error in analyzeEssayPerCriterion:', error);
+    throw error;
+  }
+}
+
+export async function generateTodoList(criterionFeedback: any, essay: string) {
+  try {
+    if (!process.env.github_token) {
+      throw new Error("GitHub token not configured");
+    }
+
+    const systemPrompt = `You are an expert writing tutor helping students create actionable todo lists based on feedback.
+
+Based on the feedback provided, generate a list of specific, actionable tasks that the student can complete to improve their writing.
+
+Each task should be:
+- Specific and measurable
+- Realistic and achievable
+- Directly related to the feedback
+- Clear and actionable
+
+Please provide your response in this exact JSON format:
+{
+  "todoItems": [
+    {
+      "title": "Task title",
+      "description": "Detailed description of what to do",
+      "priority": "high|medium|low"
+    }
+  ]
+}`;
+
+    const userPrompt = `Based on this feedback for the essay, generate a todo list:
+
+Feedback: ${criterionFeedback.feedback}
+
+Essay: "${essay}"
+
+Generate 3-5 specific, actionable tasks.`;
+
+    const response = await client.chat.completions.create({
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt }
+      ],
+      model: process.env.openai_model || "openai/gpt-4o-mini",
+      temperature: 0.7,
+      max_tokens: 800,
+    });
+
+    if (!response.choices[0]?.message?.content) {
+      throw new Error("No response content received from AI");
+    }
+
+    const content = response.choices[0].message.content;
+    
+    try {
+      const result = JSON.parse(content);
+      return result.todoItems || [];
+    } catch (parseError) {
+      return [];
+    }
+  } catch (error) {
+    console.error('Error in generateTodoList:', error);
+    throw error;
+  }
+}
+
+export async function evaluateImprovements(originalEssay: string, editedEssay: string, criterionId: string, criterionName: string, todoItemTitle: string) {
+  try {
+    if (!process.env.github_token) {
+      throw new Error("GitHub token not configured");
+    }
+
+    const systemPrompt = `You are an expert writing tutor evaluating how well a student addressed specific feedback.
+
+Your task is to:
+1. Compare the original and edited versions
+2. Evaluate how well the student addressed the specific todo item
+3. Provide constructive feedback on the improvements
+4. Suggest further refinements if needed
+
+Please provide your response in this exact JSON format:
+{
+  "improvementScore": number (1-10),
+  "feedback": "detailed feedback on the improvements",
+  "suggestions": ["suggestion1", "suggestion2"],
+  "addressedCriteria": ["criterion1", "criterion2"]
+}`;
+
+    const userPrompt = `Please evaluate how well the student addressed this todo item: "${todoItemTitle}"
+
+Criterion: ${criterionName}
+
+Original Essay:
+"${originalEssay}"
+
+Edited Essay:
+"${editedEssay}"
+
+Evaluate the improvements and provide specific feedback.`;
+
+    const response = await client.chat.completions.create({
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt }
+      ],
+      model: process.env.openai_model || "openai/gpt-4o-mini",
+      temperature: 0.7,
+      max_tokens: 1000,
+    });
+
+    if (!response.choices[0]?.message?.content) {
+      throw new Error("No response content received from AI");
+    }
+
+    const content = response.choices[0].message.content;
+    
+    try {
+      const result = JSON.parse(content);
+      return {
+        improvementScore: result.improvementScore,
+        feedback: result.feedback,
+        suggestions: result.suggestions || [],
+        addressedCriteria: result.addressedCriteria || []
+      };
+    } catch (parseError) {
+      return {
+        improvementScore: 5,
+        feedback: content,
+        suggestions: [],
+        addressedCriteria: []
+      };
+    }
+  } catch (error) {
+    console.error('Error in evaluateImprovements:', error);
+    throw error;
+  }
+}
+
 export async function chatAboutFeedback(messages: Array<{role: 'user' | 'assistant', content: string}>, examType: string, originalEssay: string) {
   const rubrics = getRubrics();
   const selectedRubric = rubrics[examType as keyof typeof rubrics];
