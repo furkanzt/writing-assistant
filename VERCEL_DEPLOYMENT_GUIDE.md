@@ -19,16 +19,16 @@ This guide will help you get your AI writing assistant working on Vercel with Gi
 4. Add these variables:
 
 ```
-GITHUB_TOKEN=your_github_pat_token_here
-OPENAI_BASE_URL=https://models.github.ai/inference
-OPENAI_MODEL=openai/gpt-4o-mini
+github_token=your_github_pat_token_here
+openai_base_url=https://models.github.ai/inference
+openai_model=openai/gpt-4o-mini
 ```
 
 **Method 2: Vercel CLI**
 ```bash
-vercel env add GITHUB_TOKEN
-vercel env add OPENAI_BASE_URL
-vercel env add OPENAI_MODEL
+vercel env add github_token
+vercel env add openai_base_url
+vercel env add openai_model
 ```
 
 ### 2. Redeploy Your Project
@@ -52,13 +52,14 @@ Test your AI features by:
 ### Common Issues:
 
 **1. "Failed to analyze essay" error**
-- Check if `GITHUB_TOKEN` is set correctly
+- Check if `github_token` is set correctly
 - Verify your GitHub PAT has the necessary permissions
 - Ensure the token hasn't expired
 
 **2. "Environment variables not found"**
 - Make sure you added the variables to the correct environment (Production/Preview/Development)
 - Redeploy after adding environment variables
+- Verify variable names use lowercase letters, digits, dashes, and underscores only
 
 **3. API routes returning 500 errors**
 - Check Vercel function logs in the dashboard
@@ -79,7 +80,7 @@ node test-ai-features.js
 ## 📝 Important Notes
 
 - **GitHub PAT**: Make sure your Personal Access Token has the necessary permissions for GitHub AI models
-- **Environment Variables**: These are case-sensitive
+- **Environment Variables**: Use lowercase letters, digits, dashes, and underscores only
 - **Redeployment**: Always redeploy after adding environment variables
 - **Rate Limits**: Be aware of GitHub AI API rate limits
 

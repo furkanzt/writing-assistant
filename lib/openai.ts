@@ -1,8 +1,8 @@
 import OpenAI from "openai";
 
 const client = new OpenAI({
-  baseURL: process.env.OPENAI_BASE_URL || "https://models.github.ai/inference",
-  apiKey: process.env.GITHUB_TOKEN,
+  baseURL: process.env.openai_base_url || "https://models.github.ai/inference",
+  apiKey: process.env.github_token,
 });
 
 export async function analyzeEssay(essay: string, examType: string, prompt?: string) {
@@ -35,7 +35,7 @@ Essay: "${essay}"`;
       { role: "system", content: systemPrompt },
       { role: "user", content: userPrompt }
     ],
-    model: process.env.OPENAI_MODEL || "openai/gpt-4o-mini",
+    model: process.env.openai_model || "openai/gpt-4o-mini",
     temperature: 0.7,
     max_tokens: 2000,
   });
@@ -72,7 +72,7 @@ Be helpful, encouraging, and educational in your responses.`;
       { role: "system", content: systemPrompt },
       ...messages
     ],
-    model: process.env.OPENAI_MODEL || "openai/gpt-4o",
+    model: process.env.openai_model || "openai/gpt-4o",
     temperature: 0.7,
     max_tokens: 1000,
   });
