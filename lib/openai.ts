@@ -6,14 +6,24 @@ const client = new OpenAI({
 });
 
 export async function analyzeEssay(essay: string, examType: string, prompt?: string) {
-  const rubrics = getRubrics();
-  const selectedRubric = rubrics[examType as keyof typeof rubrics];
-  
-  if (!selectedRubric) {
-    throw new Error("Invalid exam type");
-  }
+  try {
+    // Validate environment variables
+    if (!process.env.github_token) {
+      throw new Error("GitHub token not configured");
+    }
+    
+    if (!process.env.openai_base_url) {
+      throw new Error("OpenAI base URL not configured");
+    }
 
-  const systemPrompt = `You are an expert essay evaluator for ${selectedRubric.name} exams. 
+    const rubrics = getRubrics();
+    const selectedRubric = rubrics[examType as keyof typeof rubrics];
+    
+    if (!selectedRubric) {
+      throw new Error("Invalid exam type");
+    }
+
+    const systemPrompt = `You are an expert essay evaluator for ${selectedRubric.name} exams. 
 Your task is to analyze and provide CONCISE feedback on essays based on the following rubric:
 
 ${selectedRubric.rubric}
@@ -26,21 +36,36 @@ Please provide a SHORT, focused feedback with:
 
 Keep your response under 300 words. Use markdown formatting (**bold** for headings, bullet points). Be constructive and encouraging.`;
 
-  const userPrompt = prompt || `Please analyze this ${selectedRubric.name} essay and provide detailed feedback:
+    const userPrompt = prompt || `Please analyze this ${selectedRubric.name} essay and provide detailed feedback:
 
 Essay: "${essay}"`;
 
-  const response = await client.chat.completions.create({
-    messages: [
-      { role: "system", content: systemPrompt },
-      { role: "user", content: userPrompt }
-    ],
-    model: process.env.openai_model || "openai/gpt-4o-mini",
-    temperature: 0.7,
-    max_tokens: 2000,
-  });
+    console.log('Making API call with:', {
+      model: process.env.openai_model || "openai/gpt-4o-mini",
+      baseURL: process.env.openai_base_url,
+      examType,
+      essayLength: essay.length
+    });
 
-  return response.choices[0].message.content;
+    const response = await client.chat.completions.create({
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt }
+      ],
+      model: process.env.openai_model || "openai/gpt-4o-mini",
+      temperature: 0.7,
+      max_tokens: 2000,
+    });
+
+    if (!response.choices[0]?.message?.content) {
+      throw new Error("No response content received from AI");
+    }
+
+    return response.choices[0].message.content;
+  } catch (error) {
+    console.error('Error in analyzeEssay:', error);
+    throw error; // Re-throw to be handled by the API route
+  }
 }
 
 export async function chatAboutFeedback(messages: Array<{role: 'user' | 'assistant', content: string}>, examType: string, originalEssay: string) {
