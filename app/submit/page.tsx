@@ -249,8 +249,20 @@ export default function SubmitPage() {
       })
 
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Failed to analyze essay')
+        let errorMessage = 'Failed to analyze essay'
+        try {
+          const errorData = await response.json()
+          errorMessage = errorData.error || errorMessage
+        } catch (jsonError) {
+          // If response is not JSON, try to get text
+          try {
+            const errorText = await response.text()
+            errorMessage = errorText || errorMessage
+          } catch (textError) {
+            errorMessage = `HTTP ${response.status}: ${response.statusText}`
+          }
+        }
+        throw new Error(errorMessage)
       }
 
       const analysisData: EssayAnalysis = await response.json()

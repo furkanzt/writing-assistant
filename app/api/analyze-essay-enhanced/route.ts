@@ -4,10 +4,18 @@ import { EssayAnalysis, CriterionFeedback, TodoItem } from '@/lib/types';
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('Enhanced essay analysis request received');
+    
     // Check environment variables
     const githubToken = process.env.github_token;
     const openaiBaseUrl = process.env.openai_base_url;
     const openaiModel = process.env.openai_model;
+
+    console.log('Environment variables check:', {
+      hasGithubToken: !!githubToken,
+      hasOpenaiBaseUrl: !!openaiBaseUrl,
+      hasOpenaiModel: !!openaiModel
+    });
 
     if (!githubToken) {
       console.error('Missing github_token environment variable');
@@ -27,6 +35,13 @@ export async function POST(request: NextRequest) {
 
     const { essay, examType, title, topic } = await request.json();
 
+    console.log('Received request data:', {
+      examType,
+      essayLength: essay?.length,
+      hasEssay: !!essay,
+      hasExamType: !!examType
+    });
+
     if (!essay || !examType) {
       return NextResponse.json(
         { error: 'Essay content and exam type are required' },
@@ -43,11 +58,14 @@ export async function POST(request: NextRequest) {
 
     // Get the rubric for the exam type
     const rubrics = getRubrics();
+    console.log('Available rubrics:', Object.keys(rubrics));
     const selectedRubric = rubrics[examType as keyof typeof rubrics];
+    
+    console.log('Selected rubric:', selectedRubric ? 'Found' : 'Not found');
     
     if (!selectedRubric) {
       return NextResponse.json(
-        { error: 'Invalid exam type' },
+        { error: `Invalid exam type: ${examType}. Supported types: ${Object.keys(rubrics).join(', ')}` },
         { status: 400 }
       );
     }
@@ -146,12 +164,24 @@ export async function POST(request: NextRequest) {
       errorMessage = error.message;
     }
     
-    return NextResponse.json(
-      { 
-        error: errorMessage
-      },
-      { status: 500 }
-    );
+    // Ensure we always return valid JSON
+    try {
+      return NextResponse.json(
+        { 
+          error: errorMessage
+        },
+        { status: 500 }
+      );
+    } catch (jsonError) {
+      console.error('Error creating JSON response:', jsonError);
+      return new NextResponse(
+        JSON.stringify({ error: 'Internal server error' }),
+        { 
+          status: 500,
+          headers: { 'Content-Type': 'application/json' }
+        }
+      );
+    }
   }
 }
 
