@@ -218,7 +218,7 @@ export default function SubmitPage() {
         hasTopic: !!selectedTopic
       });
 
-      const response = await fetch('/api/analyze-essay', {
+      const response = await fetch('/api/analyze-essay-enhanced', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -252,8 +252,8 @@ export default function SubmitPage() {
 
       const analysisData: EssayAnalysis = await response.json()
       
-      // Navigate to the feedback page
-      router.push(`/feedback/${analysisData.id}`)
+      // Navigate to the enhanced feedback page
+      router.push(`/feedback-enhanced/${analysisData.id}`)
       
     } catch (error) {
       console.error('Error analyzing essay:', error)
