@@ -49,13 +49,22 @@ export default function FeedbackEnhancedPage() {
 
   const loadAnalysis = async () => {
     try {
+      setIsLoading(true)
       // Try to load real analysis data from localStorage first
-      const storedAnalysis = localStorage.getItem(`analysis_${analysisId}`)
-      if (storedAnalysis) {
-        const analysisData = JSON.parse(storedAnalysis)
-        setAnalysis(analysisData)
-        setIsLoading(false)
-        return
+      if (typeof window !== 'undefined') {
+        try {
+          const storedAnalysis = localStorage.getItem(`analysis_${analysisId}`)
+          if (storedAnalysis) {
+            const analysisData = JSON.parse(storedAnalysis)
+            if (analysisData && analysisData.id) {
+              setAnalysis(analysisData)
+              setIsLoading(false)
+              return
+            }
+          }
+        } catch (parseError) {
+          console.warn('Could not parse stored analysis data:', parseError)
+        }
       }
       
       // Fallback to mock data if no real data found
@@ -168,10 +177,25 @@ export default function FeedbackEnhancedPage() {
       }
       
       setAnalysis(mockAnalysis)
-      setIsLoading(false)
     } catch (error) {
       console.error('Error loading analysis:', error)
-      setIsLoading(false)
+      // Set a minimal fallback to prevent crash
+      setAnalysis({
+        id: analysisId,
+        essay: "Error loading essay data",
+        examType: "ielts",
+        title: "Error",
+        topic: "Error",
+        timestamp: new Date(),
+        overallScore: 0,
+        maxScore: 100,
+        criterionFeedbacks: [],
+        generalFeedback: "Error loading feedback",
+        todoList: [],
+        editingHistory: []
+      });
+    } finally {
+      setIsLoading(false);
     }
   }
 

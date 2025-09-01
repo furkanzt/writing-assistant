@@ -250,10 +250,21 @@ export default function SubmitPage() {
         throw new Error(errorMessage)
       }
 
-      const analysisData: EssayAnalysis = await response.json()
+      const analysisData = await response.json()
+      
+      // Validate the response has required fields
+      if (!analysisData.id) {
+        throw new Error('Invalid response: missing analysis ID')
+      }
       
       // Store analysis data temporarily in localStorage
-      localStorage.setItem(`analysis_${analysisData.id}`, JSON.stringify(analysisData))
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem(`analysis_${analysisData.id}`, JSON.stringify(analysisData))
+        } catch (storageError) {
+          console.warn('Could not store analysis data:', storageError)
+        }
+      }
       
       // Navigate to the enhanced feedback page
       router.push(`/feedback-enhanced/${analysisData.id}`)
