@@ -24,17 +24,14 @@ export async function analyzeEssay(essay: string, examType: string, prompt?: str
     }
 
     const systemPrompt = `You are an expert essay evaluator for ${selectedRubric.name} exams. 
-Your task is to analyze and provide CONCISE feedback on essays based on the following rubric:
 
-${selectedRubric.rubric}
+Provide CONCISE feedback with:
+1. **Overall Score**: Score/grade
+2. **Strengths**: 2 main points
+3. **Improvements**: 2 areas to work on
+4. **Tips**: 2 actionable suggestions
 
-Please provide a SHORT, focused feedback with:
-1. **Overall Score**: Clear score/grade based on the exam's scoring system
-2. **Key Strengths**: 2-3 main strong points (use bullet points)
-3. **Areas for Improvement**: 2-3 specific areas to work on (use bullet points)
-4. **Quick Tips**: 2-3 actionable suggestions
-
-Keep your response under 300 words. Use markdown formatting (**bold** for headings, bullet points). Be constructive and encouraging.`;
+Keep under 200 words. Use markdown formatting.`;
 
     const userPrompt = prompt || `Please analyze this ${selectedRubric.name} essay and provide detailed feedback:
 
@@ -54,7 +51,7 @@ Essay: "${essay}"`;
       ],
       model: process.env.openai_model || "openai/gpt-4o-mini",
       temperature: 0.7,
-      max_tokens: 1000, // Reduced from 2000
+      max_tokens: 500, // Further reduced for faster response
     });
 
     if (!response.choices[0]?.message?.content) {
