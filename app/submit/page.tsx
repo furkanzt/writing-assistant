@@ -123,30 +123,6 @@ export default function SubmitPage() {
     "metu-epe": `# METU EPE Writing Template
 
 ## Introduction
-- Hook/Background
-- Restate the topic
-- Clear thesis statement
-
-## Body Paragraph 1
-- Topic sentence
-- Supporting detail 1
-- Supporting detail 2
-- Concluding sentence
-
-## Body Paragraph 2
-- Topic sentence
-- Supporting detail 1
-- Supporting detail 2
-- Concluding sentence
-
-## Conclusion
-- Restate thesis
-- Summarize main points
-- Final thought`,
-
-    "metu-epe": `# METU EPE Writing Template
-
-## Introduction
 - Background information
 - Thesis statement
 - Essay outline
@@ -235,7 +211,14 @@ export default function SubmitPage() {
     setIsTimerActive(false)
     
     try {
-      const response = await fetch('/api/analyze-essay-enhanced', {
+      console.log('Submitting essay for analysis:', {
+        examType: selectedRubric,
+        essayLength: essayText.length,
+        hasTitle: !!essayTitle,
+        hasTopic: !!selectedTopic
+      });
+
+      const response = await fetch('/api/analyze-essay', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -247,6 +230,8 @@ export default function SubmitPage() {
           topic: selectedTopic,
         }),
       })
+
+      console.log('Response status:', response.status, response.statusText);
 
       if (!response.ok) {
         let errorMessage = 'Failed to analyze essay'
@@ -267,8 +252,8 @@ export default function SubmitPage() {
 
       const analysisData: EssayAnalysis = await response.json()
       
-      // Navigate to the enhanced feedback page
-      router.push(`/feedback-enhanced/${analysisData.id}`)
+      // Navigate to the feedback page
+      router.push(`/feedback/${analysisData.id}`)
       
     } catch (error) {
       console.error('Error analyzing essay:', error)
