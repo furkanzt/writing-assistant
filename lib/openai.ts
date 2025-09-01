@@ -55,7 +55,6 @@ Essay: "${essay}"`;
       model: process.env.openai_model || "openai/gpt-4o-mini",
       temperature: 0.7,
       max_tokens: 1000, // Reduced from 2000
-      timeout: 15000, // 15 second timeout
     });
 
     if (!response.choices[0]?.message?.content) {
@@ -111,7 +110,6 @@ Focus only on this criterion and provide specific, actionable feedback.`;
       model: process.env.openai_model || "openai/gpt-4o-mini",
       temperature: 0.7,
       max_tokens: 800, // Reduced for faster response
-      timeout: 10000, // 10 second timeout
     });
 
     if (!response.choices[0]?.message?.content) {
@@ -186,7 +184,6 @@ Generate 3-5 specific, actionable tasks.`;
       model: process.env.openai_model || "openai/gpt-4o-mini",
       temperature: 0.7,
       max_tokens: 600, // Reduced for faster response
-      timeout: 8000, // 8 second timeout
     });
 
     if (!response.choices[0]?.message?.content) {
@@ -311,7 +308,6 @@ Be helpful, encouraging, and educational in your responses.`;
     model: process.env.openai_model || "openai/gpt-4o",
     temperature: 0.7,
     max_tokens: 600, // Reduced for faster response
-    timeout: 8000, // 8 second timeout
   });
 
   return response.choices[0].message.content;
