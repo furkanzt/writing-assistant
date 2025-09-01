@@ -252,6 +252,9 @@ export default function SubmitPage() {
 
       const analysisData: EssayAnalysis = await response.json()
       
+      // Store analysis data temporarily in localStorage
+      localStorage.setItem(`analysis_${analysisData.id}`, JSON.stringify(analysisData))
+      
       // Navigate to the enhanced feedback page
       router.push(`/feedback-enhanced/${analysisData.id}`)
       

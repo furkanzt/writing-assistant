@@ -49,8 +49,16 @@ export default function FeedbackEnhancedPage() {
 
   const loadAnalysis = async () => {
     try {
-      // In a real app, you'd fetch from your database
-      // For now, we'll simulate loading the analysis
+      // Try to load real analysis data from localStorage first
+      const storedAnalysis = localStorage.getItem(`analysis_${analysisId}`)
+      if (storedAnalysis) {
+        const analysisData = JSON.parse(storedAnalysis)
+        setAnalysis(analysisData)
+        setIsLoading(false)
+        return
+      }
+      
+      // Fallback to mock data if no real data found
       const mockAnalysis: EssayAnalysis = {
         id: analysisId,
         essay: "This is a sample essay that demonstrates various writing techniques. The author presents a clear argument with supporting evidence. However, there are areas for improvement in terms of vocabulary and sentence structure. The essay addresses the task well but could benefit from more specific examples and better transitions between paragraphs.",
@@ -186,7 +194,7 @@ export default function FeedbackEnhancedPage() {
   }
 
   const handleSendMessage = async () => {
-    if (!newMessage.trim() || !selectedCriterion) return
+    if (!newMessage.trim() || !selectedCriterion || !analysis) return
 
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
@@ -199,17 +207,45 @@ export default function FeedbackEnhancedPage() {
     setChatMessages(prev => [...prev, userMessage])
     setNewMessage("")
 
-    // Simulate AI response
-    setTimeout(() => {
+    try {
+      // Call the real chat API
+      const response = await fetch('/api/chat-feedback', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          messages: [...chatMessages, userMessage],
+          examType: analysis.examType,
+          originalEssay: analysis.essay
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to get AI response')
+      }
+
+      const data = await response.json()
+      
       const aiMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: "I understand your question about this criterion. Let me help you improve this aspect of your writing.",
+        content: data.response,
         timestamp: new Date(),
         reactions: []
       }
       setChatMessages(prev => [...prev, aiMessage])
-    }, 1000)
+    } catch (error) {
+      console.error('Error sending chat message:', error)
+      const errorMessage: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: "I'm sorry, I'm having trouble responding right now. Please try again later.",
+        timestamp: new Date(),
+        reactions: []
+      }
+      setChatMessages(prev => [...prev, errorMessage])
+    }
   }
 
   const handleReaction = (messageId: string, reactionType: 'like' | 'dislike') => {
