@@ -276,6 +276,95 @@ Evaluate the improvements and provide specific feedback.`;
   }
 }
 
+export async function analyzeEssayComprehensive(essay: string, examType: string, rubric: any) {
+  try {
+    if (!process.env.github_token) {
+      throw new Error("GitHub token not configured");
+    }
+    
+    if (!process.env.openai_base_url) {
+      throw new Error("OpenAI base URL not configured");
+    }
+
+    const systemPrompt = `You are an expert essay evaluator for ${rubric.name} exams. 
+Your task is to provide a comprehensive analysis of the essay in a single response.
+
+Please analyze the essay and provide your response in this exact JSON format:
+{
+  "generalFeedback": "Overall feedback on the essay (2-3 sentences)",
+  "criteria": {
+    "criterion-id-1": {
+      "score": number,
+      "feedback": "Specific feedback for this criterion",
+      "todoItems": [
+        {
+          "title": "Task title",
+          "description": "What to do",
+          "priority": "high|medium|low"
+        }
+      ]
+    },
+    "criterion-id-2": {
+      "score": number,
+      "feedback": "Specific feedback for this criterion", 
+      "todoItems": [
+        {
+          "title": "Task title",
+          "description": "What to do",
+          "priority": "high|medium|low"
+        }
+      ]
+    }
+  }
+}
+
+Focus on being concise but comprehensive. Provide 2-3 todo items per criterion.`;
+
+    const criteriaList = rubric.criteria.map((c: any) => 
+      `- ${c.name} (${c.id}): ${c.description}`
+    ).join('\n');
+
+    const userPrompt = `Please analyze this ${rubric.name} essay comprehensively:
+
+Essay: "${essay}"
+
+Assessment Criteria:
+${criteriaList}
+
+Provide scores, feedback, and actionable todo items for each criterion.`;
+
+    const response = await client.chat.completions.create({
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt }
+      ],
+      model: process.env.openai_model || "openai/gpt-4o-mini",
+      temperature: 0.7,
+      max_tokens: 2000, // Increased for comprehensive response
+    });
+
+    if (!response.choices[0]?.message?.content) {
+      throw new Error("No response content received from AI");
+    }
+
+    const content = response.choices[0].message.content;
+    
+    try {
+      const result = JSON.parse(content);
+      return result;
+    } catch (parseError) {
+      // Fallback if JSON parsing fails
+      return {
+        generalFeedback: content,
+        criteria: {}
+      };
+    }
+  } catch (error) {
+    console.error('Error in analyzeEssayComprehensive:', error);
+    throw error;
+  }
+}
+
 export async function chatAboutFeedback(messages: Array<{role: 'user' | 'assistant', content: string}>, examType: string, originalEssay: string) {
   const rubrics = getRubrics();
   const selectedRubric = rubrics[examType as keyof typeof rubrics];

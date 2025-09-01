@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { analyzeEssay, analyzeEssayPerCriterion, generateTodoList } from '@/lib/openai';
+import { analyzeEssayComprehensive } from '@/lib/openai';
 import { EssayAnalysis, CriterionFeedback, TodoItem } from '@/lib/types';
 
 // Set timeout for Vercel (8 seconds to be safe)
@@ -73,91 +73,48 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generate general feedback
-    console.log('Starting general feedback analysis...');
-    const generalFeedback = await analyzeEssay(essay, examType);
+    // Generate comprehensive feedback in a single API call to avoid timeout
+    console.log('Starting comprehensive essay analysis...');
+    const comprehensiveAnalysis = await analyzeEssayComprehensive(essay, examType, selectedRubric);
 
-    // Generate per-criterion feedback (limit to 2 calls to avoid timeout)
+    // Parse the comprehensive analysis
+    const generalFeedback = comprehensiveAnalysis.generalFeedback;
     const criterionFeedbacks: CriterionFeedback[] = [];
     let totalScore = 0;
     let maxTotalScore = 0;
 
-    // Only analyze the first 2 criteria to avoid timeout
-    const criteriaToAnalyze = selectedRubric.criteria.slice(0, 2);
-    
-    for (const criterion of criteriaToAnalyze) {
-      try {
-        console.log(`Analyzing criterion: ${criterion.name}`);
-        
-        const criterionAnalysis = await analyzeEssayPerCriterion(
-          essay,
-          examType,
-          criterion.id,
-          criterion.name,
-          criterion.description
-        );
-
+    // Process each criterion from the comprehensive analysis
+    for (const criterion of selectedRubric.criteria) {
+      const criterionData = comprehensiveAnalysis.criteria[criterion.id];
+      
+      if (criterionData) {
         const criterionFeedback: CriterionFeedback = {
           criterionId: criterion.id,
           criterionName: criterion.name,
-          score: criterionAnalysis.score,
-          maxScore: criterionAnalysis.maxScore,
-          feedback: criterionAnalysis.feedback,
-          aiFeedback: criterionAnalysis.feedback,
+          score: criterionData.score,
+          maxScore: criterion.maxScore,
+          feedback: criterionData.feedback,
+          aiFeedback: criterionData.feedback,
           chatHistory: [],
-          todoItems: []
+          todoItems: criterionData.todoItems || []
         };
-
-        // Generate todo list for this criterion
-        try {
-          console.log(`Generating todo list for ${criterion.name}`);
-          const todoItems = await generateTodoList(criterionAnalysis, essay);
-          criterionFeedback.todoItems = todoItems.map((item: any, index: number) => ({
-            id: `${criterion.id}-todo-${index}`,
-            title: item.title,
-            description: item.description,
-            status: 'pending' as const,
-            criterionId: criterion.id,
-            createdAt: new Date(),
-            priority: item.priority || 'medium'
-          }));
-        } catch (todoError) {
-          console.error('Error generating todo list for criterion:', criterion.id, todoError);
-        }
-
+        
         criterionFeedbacks.push(criterionFeedback);
-        totalScore += criterionAnalysis.score;
-        maxTotalScore += criterionAnalysis.maxScore;
-      } catch (criterionError) {
-        console.error('Error analyzing criterion:', criterion.id, criterionError);
-        // Add a default feedback for failed criteria
+        totalScore += criterionData.score;
+        maxTotalScore += criterion.maxScore;
+      } else {
+        // Fallback for missing criteria
         criterionFeedbacks.push({
           criterionId: criterion.id,
           criterionName: criterion.name,
           score: 0,
           maxScore: criterion.maxScore,
-          feedback: 'Unable to analyze this criterion at this time.',
-          aiFeedback: 'Unable to analyze this criterion at this time.',
+          feedback: `Analysis for ${criterion.name} will be available in the enhanced interface.`,
+          aiFeedback: `Analysis for ${criterion.name} will be available in the enhanced interface.`,
           chatHistory: [],
           todoItems: []
         });
       }
-    }
-
-    // Add remaining criteria with basic feedback (no AI call)
-    for (let i = 2; i < selectedRubric.criteria.length; i++) {
-      const criterion = selectedRubric.criteria[i];
-      const criterionFeedback: CriterionFeedback = {
-        criterionId: criterion.id,
-        criterionName: criterion.name,
-        score: 0,
-        maxScore: criterion.maxScore,
-        feedback: `Detailed analysis for ${criterion.name} will be available in the enhanced interface.`,
-        aiFeedback: `Detailed analysis for ${criterion.name} will be available in the enhanced interface.`,
-        chatHistory: [],
-        todoItems: []
-      };
-      criterionFeedbacks.push(criterionFeedback);
     }
 
     // Calculate overall score
